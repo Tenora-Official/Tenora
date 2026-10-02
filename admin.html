@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TENORA Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<style>
+body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#F7F3EC;color:#292827}
+main{max-width:980px;margin:0 auto;padding:16px}
+input,select,textarea,button{font:inherit;padding:9px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box}
+input,select,textarea{width:100%;background:#fff}input[type=checkbox]{width:auto}
+button{background:#292827;color:#F7F3EC;cursor:pointer;width:auto}button.off{background:#fff;color:#292827}
+.tabs{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:12px}
+.card label{display:block;font-size:12px;color:#666;margin:8px 0 2px}
+.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sub{margin:10px 0 0 14px;padding-left:12px;border-left:3px solid #9CA694}
+.tag{padding:2px 9px;border-radius:99px;background:#9CA694;color:#fff;font-size:12px}
+img.pv{max-height:70px;border-radius:6px;display:block;margin-top:5px}small{color:#777}ul{margin:6px 0;padding-left:18px}
+</style></head><body><main>
+<h1>TENORA Admin</h1>
+<div id="login"><input id="em" type="email" placeholder="Email" style="max-width:260px"> <input id="pw" type="password" placeholder="Password" style="max-width:200px"> <button id="go">Sign in</button> <small id="err"></small></div>
+<div id="app" hidden>
+  <div class="tabs"><button data-t="orders">Orders</button><button data-t="products" class="off">Products</button><button data-t="colls" class="off">Gift collections &amp; prices</button><button id="out" class="off">Sign out</button></div>
+  <div id="orders"></div><div id="products" hidden></div><div id="colls" hidden></div>
+</div>
+<script>
+const sb=supabase.createClient(TENORA_SUPABASE.url,TENORA_SUPABASE.key),$=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STATUS=['new','confirmed','paid','packed','delivered','cancelled'];
+async function up(file){const p=Date.now()+'-'+file.name.replace(/[^\w.]/g,'_');const {error}=await sb.storage.from('product-images').upload(p,file);if(error)throw error;return sb.storage.from('product-images').getPublicUrl(p).data.publicUrl;}
+
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  $('#login').hidden=!!session;$('#app').hidden=!session;
+  if(session){loadOrders();loadProducts();loadColls();}
+}
+$('#go').onclick=async()=>{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});$('#err').textContent=error?error.message:'';init();};
+$('#out').onclick=async()=>{await sb.auth.signOut();init();};
+document.querySelectorAll('.tabs [data-t]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs [data-t]').forEach(x=>{x.className=x===b?'':'off';$('#'+x.dataset.t).hidden=x!==b;});});
+
+// ---------- generic editor card ----------
+function inp(f,v){
+  const k=`data-k="${f.k}"`;
+  if(f.t==='area')return `<textarea ${k} rows="2">${esc(v)}</textarea>`;
+  if(f.t==='bool')return `<input ${k} type="checkbox"${v?' checked':''}>`;
+  if(f.t==='list')return `<input ${k} value="${esc((v||[]).join(', '))}" placeholder="comma, separated">`;
+  if(f.t==='select')return `<select ${k}>${f.o.map(o=>`<option value="${esc(o[0])}"${o[0]===v?' selected':''}>${esc(o[1])}</option>`).join('')}</select>`;
+  if(f.t==='image')return `<input ${k} type="file" accept="image/*">${v?`<img class="pv" src="${esc(v)}">`:''}`;
+  return `<input ${k} type="${f.t==='number'?'number':'text'}" value="${esc(v)}">`;
+}
+function card(table,row,fields,reload,extra={}){
+  const el=document.createElement('div');el.className='card';
+  el.innerHTML=fields.map(f=>`<label>${f.l}${f.req?' *':''}</label>${inp(f,row[f.k])}`).join('')+
+    `<div class="row"><span><button class="s">${row.id?'Save':'Add'}</button> ${row.id?'<button class="d off">Delete</button>':''}</span><small class="m"></small></div>`;
+  const m=el.querySelector('.m');
+  el.querySelector('.s').onclick=async()=>{
+    try{
+      const val={...extra};
+      for(const f of fields){
+        const i=el.querySelector(`[data-k="${f.k}"]`);let v;
+        if(f.t==='bool')v=i.checked;
+        else if(f.t==='list')v=i.value.split(',').map(x=>x.trim()).filter(Boolean);
+        else if(f.t==='number')v=i.value===''?(f.d??null):Number(i.value);
+        else if(f.t==='image')v=i.files[0]?await up(i.files[0]):(row[f.k]||null);
+        else v=i.value.trim()||null;
+        if(f.req&&!v)throw new Error(f.l+' is required');
+        val[f.k]=v;
+      }
+      const r=row.id?await sb.from(table).update(val).eq('id',row.id):await sb.from(table).insert(val);
+      if(r.error)throw r.error;
+      m.textContent='Saved ✓';reload();
+    }catch(e){m.textContent='Error: '+e.message;}
+  };
+  const d=el.querySelector('.d');
+  if(d)d.onclick=async()=>{if(!confirm('Delete this?'))return;const {error}=await sb.from(table).delete().eq('id',row.id);if(error)m.textContent='Error: '+error.message;else reload();};
+  return el;
+}
+
+// ---------- orders ----------
+async function loadOrders(){
+  const {data,error}=await sb.from('orders').select('*').order('created_at',{ascending:false});
+  if(error){$('#orders').textContent='Orders error: '+error.message+' (run setup-orders.sql?)';return;}
+  $('#orders').innerHTML=data.length?data.map(o=>`<div class="card">
+    <div class="row" style="margin:0"><strong>#${o.id.slice(0,8)} · ${esc(o.customer_name)}</strong><span><span class="tag">${o.payment_method==='cod'?'COD':'Bank transfer'}</span>
+    <select data-id="${o.id}" style="width:auto">${STATUS.map(s=>`<option${s===o.status?' selected':''}>${s}</option>`).join('')}</select></span></div>
+    <small>${new Date(o.created_at).toLocaleString()} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></small>
+    <div>${esc(o.address)}</div>
+    <ul>${(o.items||[]).map(i=>`<li>${esc(i.name)} (${esc(i.opt)}) x${i.qty}${i.price!=null?' — LKR '+(i.price*i.qty).toLocaleString():' — price?'}</li>`).join('')}</ul>
+    <strong>Total: LKR ${Number(o.total||0).toLocaleString()}</strong>${o.notes?`<div><small>Note: ${esc(o.notes)}</small></div>`:''}</div>`).join(''):'<p>No orders yet.</p>';
+  $('#orders').querySelectorAll('select[data-id]').forEach(s=>s.onchange=()=>sb.from('orders').update({status:s.value}).eq('id',s.dataset.id));
+}
+
+// ---------- products ----------
+async function loadProducts(){
+  const [c,p]=await Promise.all([sb.from('categories').select('*').order('sort_order'),sb.from('products').select('*').order('sort_order').order('created_at',{ascending:false})]);
+  if(p.error||c.error){$('#products').textContent='Products error: '+(p.error||c.error).message;return;}
+  const cats=c.data.map(x=>[x.slug,x.name]);
+  const F=[{k:'name',l:'Name',req:1},{k:'category',l:'Category',t:'select',o:cats},{k:'description',l:'Description',t:'area'},{k:'price',l:'Price (LKR)',t:'number'},{k:'sizes',l:'Sizes',t:'list'},{k:'colors',l:'Colours',t:'list'},{k:'badge',l:'Badge (optional)'},{k:'image_url',l:'Photo',t:'image'},{k:'active',l:'Show on site',t:'bool'},{k:'sort_order',l:'Order',t:'number',d:0}];
+  const box=$('#products');box.innerHTML='<h3>Add product</h3>';
+  box.append(card('products',{active:true,category:cats[0]?.[0],currency:'LKR'},F,loadProducts));
+  box.insertAdjacentHTML('beforeend','<h3>Products</h3>');
+  p.data.forEach(r=>box.append(card('products',r,F,loadProducts)));
+}
+
+// ---------- collections ----------
+async function loadColls(){
+  const [c,i]=await Promise.all([sb.from('collections').select('*').order('sort_order'),sb.from('collection_items').select('*').order('sort_order')]);
+  if(c.error||i.error){$('#colls').textContent='Collections error: '+(c.error||i.error).message+' (run setup-collections.sql and setup-orders.sql?)';return;}
+  const CF=[{k:'slug',l:'Slug (e.g. newborn)',req:1},{k:'title',l:'Title',req:1},{k:'subtitle',l:'Subtitle'},{k:'description',l:'Description',t:'area'},{k:'price',l:'Gift box price (LKR)',t:'number'},{k:'image_url',l:'Cover photo',t:'image'},{k:'active',l:'Show on site',t:'bool'},{k:'sort_order',l:'Order',t:'number',d:0}];
+  const IF=[{k:'name',l:'Item name',req:1},{k:'detail',l:'Detail'},{k:'gender',l:'For',t:'select',o:[['any','Any'],['girl','Girl'],['boy','Boy']]},{k:'image_url',l:'Photo',t:'image'},{k:'sort_order',l:'Order',t:'number',d:0}];
+  const box=$('#colls');box.innerHTML='<h3>Add collection</h3>';
+  box.append(card('collections',{active:true},CF,loadColls));
+  box.insertAdjacentHTML('beforeend','<h3>Collections</h3>');
+  c.data.forEach(r=>{
+    const el=card('collections',r,CF,loadColls);
+    const sub=document.createElement('div');sub.className='sub';sub.innerHTML='<strong>Items</strong>';
+    i.data.filter(x=>x.collection_id===r.id).forEach(it=>sub.append(card('collection_items',it,IF,loadColls)));
+    sub.insertAdjacentHTML('beforeend','<div style="margin-top:8px"><strong>Add item</strong></div>');
+    sub.append(card('collection_items',{gender:'any'},IF,loadColls,{collection_id:r.id}));
+    el.append(sub);box.append(el);
+  });
+}
+init();
+</script></main></body></html>

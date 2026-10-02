@@ -1,0 +1,13 @@
+create table categories(id uuid primary key default gen_random_uuid(), name text not null, slug text unique not null, sort_order int default 0, created_at timestamptz default now());
+create table products(id uuid primary key default gen_random_uuid(), name text not null, category text not null, description text, price numeric, currency text default 'LKR', sizes text[] default '{}', colors text[] default '{}', badge text, image_url text, active boolean default true, sort_order int default 0, created_at timestamptz default now());
+insert into categories(name,slug,sort_order) values('Little','kids',1),('Gift','gift',2);
+alter table categories enable row level security;
+alter table products enable row level security;
+create policy "public read categories" on categories for select using (true);
+create policy "public read products" on products for select using (active = true);
+create policy "admin all categories" on categories for all to authenticated using (true) with check (true);
+create policy "admin all products" on products for all to authenticated using (true) with check (true);
+insert into storage.buckets(id,name,public) values('product-images','product-images',true) on conflict do nothing;
+create policy "public read images" on storage.objects for select using (bucket_id='product-images');
+create policy "admin upload images" on storage.objects for insert to authenticated with check (bucket_id='product-images');
+create policy "admin delete images" on storage.objects for delete to authenticated using (bucket_id='product-images');
