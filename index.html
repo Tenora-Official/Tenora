@@ -1084,6 +1084,9 @@
   header.nav{ background:rgba(247,243,236,0.94) !important; }
   .nav-logo{ color:var(--charcoal) !important; font-size:24px; font-weight:500; letter-spacing:.3em; gap:12px; }
   .nav-logo .sprig{ width:38px; height:23px; color:var(--sage); }
+  .how-grid{ grid-template-columns:repeat(4,1fr); }
+  @media (max-width:900px){ .how-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .how-grid{ grid-template-columns:1fr; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
@@ -1553,11 +1556,12 @@
   <!-- HOW TO ORDER -->
   <section class="section tight" id="how-to-order">
     <div class="wrap">
-      <div class="head-row reveal"><h2 class="serif">Ordering is simple.</h2><p>No accounts, no checkout forms. Just a quick chat with us on WhatsApp.</p></div>
+      <div class="head-row reveal"><h2 class="serif">Ordering is simple.</h2><p>No account needed. Add to cart, pay by cash on delivery or bank transfer, and we confirm everything on WhatsApp.</p></div>
       <div class="how-grid reveal">
-        <div class="how-step"><span class="m-num">01</span><h5>Choose</h5><p>Pick a piece or a gift box, then your colour and size.</p></div>
-        <div class="how-step"><span class="m-num">02</span><h5>Message us</h5><p>Tap Order on WhatsApp. Your choices arrive pre-filled, so there is nothing to retype.</p></div>
-        <div class="how-step"><span class="m-num">03</span><h5>We confirm &amp; send</h5><p>We confirm the price and delivery with you, then send it in a TENORA box.</p></div>
+        <div class="how-step"><span class="m-num">01</span><h5>Choose</h5><p>Pick a piece or a gift box, then your colour and size, and add it to your cart.</p></div>
+        <div class="how-step"><span class="m-num">02</span><h5>Check out</h5><p>Enter your name, phone and delivery address. Pay by cash on delivery or bank transfer.</p></div>
+        <div class="how-step"><span class="m-num">03</span><h5>Message us</h5><p>Your order opens in WhatsApp, pre-filled. Paying by bank transfer? Send us the slip there.</p></div>
+        <div class="how-step"><span class="m-num">04</span><h5>We confirm &amp; send</h5><p>We confirm the price and delivery with you, then send it in a TENORA box.</p></div>
       </div>
     </div>
   </section>
