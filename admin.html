@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>TENORA Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--iv:#F7F3EC;--tp:#C9BBA8;--sg:#9CA694;--ink:#292827;--ln:rgba(41,40,39,.16)}
+*{box-sizing:border-box}body{margin:0;background:var(--iv);color:var(--ink);font:300 15px/1.5 Jost,system-ui,sans-serif}
+h1,h2{font-family:'Cormorant Garamond',serif;font-weight:500;margin:0}
+h1{letter-spacing:.3em;font-size:22px}h2{font-size:26px;margin-bottom:14px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;border-bottom:1px solid var(--ln);background:#fff}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px}
+.tabs{display:flex;gap:8px;margin-bottom:24px}
+button,.btn{font:400 13px Jost,sans-serif;letter-spacing:.06em;padding:10px 18px;border:1px solid var(--ln);background:transparent;color:var(--ink);cursor:pointer;border-radius:2px}
+button.on,button.solid{background:var(--ink);color:var(--iv);border-color:var(--ink)}button.solid:hover{background:var(--sg);border-color:var(--sg)}
+button.del{color:#a33;border-color:#e3c4c4}
+.card{background:#fff;border:1px solid var(--ln);padding:20px;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}
+label{display:block;font-size:12px;letter-spacing:.08em;margin-bottom:4px;color:rgba(41,40,39,.65)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--ln);background:var(--iv);font:inherit;border-radius:2px}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--ln);flex-wrap:wrap}
+.row img,.ph{width:52px;height:52px;object-fit:cover;background:var(--tp);border-radius:2px;flex:none}
+.row .m{flex:1;min-width:150px}.hint{font-size:12px;color:rgba(41,40,39,.6);margin:0 0 14px}.tabs{flex-wrap:wrap}.row small{color:rgba(41,40,39,.6)}.off{opacity:.45}
+.login{max-width:340px;margin:12vh auto}.err{color:#a33;font-size:13px;min-height:18px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}header{padding:14px 16px;gap:8px;flex-wrap:wrap}h1{font-size:19px}.wrap{padding:20px 14px}.tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px}.tabs button{white-space:nowrap}}
+:root{color-scheme:light}.row img{background:var(--tp)}
+.nav{display:flex;gap:8px;flex-wrap:wrap}.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}.kp div{background:#fff;border:1px solid var(--ln);padding:14px}.kp b{display:block;font:500 22px 'Cormorant Garamond',serif}.kp small{color:rgba(41,40,39,.6)}
+.bar{display:grid;grid-template-columns:120px 1fr 70px;gap:10px;align-items:center;margin:8px 0;font-size:13px}.bar i{display:block;height:14px;background:var(--sg);border-radius:2px}.bar b{font-weight:400;text-align:right}
+.days{display:flex;align-items:flex-end;gap:3px;height:110px}.days i{flex:1;background:var(--tp);min-height:2px;border-radius:2px 2px 0 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);overflow:auto;padding:20px;z-index:20}.modal .card{max-width:640px;margin:0 auto}
+.chip{padding:4px 10px;font-size:12px;border-radius:999px;margin:6px 4px 0 0}.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:#eee}.pill.ok{background:#dfe8d8}.pill.no{background:#f3dcdc}
+.oline{display:grid;grid-template-columns:1fr 90px;gap:8px;margin-bottom:8px}.row select{width:auto}
+@media(max-width:640px){.kp{grid-template-columns:1fr 1fr}.bar{grid-template-columns:90px 1fr 60px}}
+</style></head><body>
+<div id="login" class="login card"><h1>TENORA</h1><p>Admin sign in</p>
+<input id="em" type="email" placeholder="Email" style="margin-bottom:8px"><input id="pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')login()"><p class="err" id="lerr"></p><button class="solid" onclick="login()">Sign in</button></div>
+<div id="app" hidden>
+<header><h1>TENORA <small style="font-family:Jost;letter-spacing:.1em;font-size:12px">ADMIN</small></h1><span><a href="index.html" target="_blank">View shop</a> &nbsp; <button onclick="logout()">Sign out</button></span></header>
+<div class="wrap">
+<div class="tabs"><button id="tabD" class="on" onclick="tab('D')">Dashboard</button><button id="tabO" onclick="tab('O')">Orders</button><button id="tabI" onclick="tab('I')">Items</button><button id="tabG" onclick="tab('G')">Gift collections</button><button id="tabC" onclick="tab('C')">Categories</button></div>
+<div id="paneG" hidden>
+ <div class="card" id="gSetup" hidden><h2>One-time setup needed</h2><p>Gift collections are not set up in your database yet. In Supabase open <strong>SQL Editor</strong>, paste everything from <strong>setup-collections.sql</strong>, press <strong>Run</strong>, then refresh this page.</p></div>
+ <div id="gMain">
+ <p class="hint">Each collection is a gift box moment (e.g. "For a newborn") shown on the shop's Collections tab. Add items to it with a photo, and mark them for Girl, Boy or All.</p>
+ <div class="card"><h2 id="gTitle">Add collection</h2>
+  <div class="grid">
+   <div><label>Title *</label><input id="gName" placeholder="For a newborn"></div>
+   <div><label>Subtitle</label><input id="gSub" placeholder="First arrivals"></div><div><label>Gift box base price (LKR) &mdash; box, cards and extras</label><input id="gPrice" type="number" min="0" placeholder="e.g. 6500"></div></div>
+   <div class="full"><label>Description</label><textarea id="gDesc" rows="3"></textarea></div>
+   <div class="full"><label>Cover photo (optional, shown big at the top)</label><input id="gFile" type="file" accept="image/*" onchange="pickG(this)"><div id="gPrev" style="margin-top:8px"></div></div>
+   <div class="full"><label style="display:flex;gap:8px;align-items:center"><input id="gActive" type="checkbox" checked style="width:auto"> Visible on the shop</label></div>
+  </div><p class="err" id="gErr"></p>
+  <button class="solid" onclick="saveColl()">Save collection</button> <button onclick="resetColl()">Clear</button></div>
+ <div class="card"><h2>All collections</h2><div id="gList"></div></div>
+ <div class="card" id="iCard" hidden><h2 id="iHead">Items</h2>
+  <p class="hint" id="iFormTitle">Add item</p>
+  <div class="grid">
+   <div><label>Item name *</label><input id="iName" placeholder="Soft bodysuit"></div>
+   <div><label>Short detail</label><input id="iDetail" placeholder="Everyday essential"></div>
+   <div><label>For</label><select id="iGender"><option value="any">All (girl, boy and neutral)</option><option value="girl">Girl only</option><option value="boy">Boy only</option></select></div>
+   <div><label>Photo</label><input id="iFile" type="file" accept="image/*" onchange="pickI(this)"><div id="iPrev" style="margin-top:8px"></div></div>
+
+   <div id="iPriceBox"><label>Price (LKR) &mdash; added to the gift box</label><input id="iPrice" type="number" min="0" placeholder="Leave blank if included free"></div>
+   <div class="full"><label style="display:flex;gap:8px;align-items:center"><input id="iOutfit" type="checkbox" style="width:auto" onchange="$('iOutBox').hidden=!this.checked;$('iPriceBox').hidden=this.checked"> This item is an outfit (customer chooses fabric, colour and size)</label><p class="hint" style="margin:6px 0 0">Leave this unticked for things like gift cards or accessories &mdash; they go in the box as they are, with no choices. Give them a price above if they cost extra.</p></div>
+   <div class="full" id="iOutBox" hidden><div class="grid"><div><label>Sizes shown to the customer</label><select id="iSizeType"><option value="baby">Baby (50&ndash;86, 0&ndash;24 months)</option><option value="kids">Kids (92&ndash;164, 2&ndash;14 years)</option><option value="women">Women (XXS&ndash;3XL)</option><option value="men">Men (XS&ndash;3XL)</option></select></div></div><label style="margin-top:12px">Fabrics, price and availability</label><p class="hint" style="margin-bottom:6px">Give each fabric its own price. Leave the price blank for a fabric you do not offer. Untick <b>Available</b> to show a fabric as &ldquo;Not available&rdquo; (out of stock). If every price is blank, the customer only picks colour and size.</p><div class="row" style="padding:6px 0;border:0"><span style="width:110px">Twill</span><input id="iFp0" type="number" min="0" placeholder="Price (LKR)" style="max-width:170px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="iFa0" type="checkbox" checked style="width:auto"> Available</label></div><div class="row" style="padding:6px 0;border:0"><span style="width:110px">Linen</span><input id="iFp1" type="number" min="0" placeholder="Price (LKR)" style="max-width:170px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="iFa1" type="checkbox" checked style="width:auto"> Available</label></div><div class="row" style="padding:6px 0;border:0"><span style="width:110px">Oxford</span><input id="iFp2" type="number" min="0" placeholder="Price (LKR)" style="max-width:170px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="iFa2" type="checkbox" checked style="width:auto"> Available</label></div><div class="row" style="padding:6px 0;border:0"><span style="width:110px">Kasper</span><input id="iFp3" type="number" min="0" placeholder="Price (LKR)" style="max-width:170px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="iFa3" type="checkbox" checked style="width:auto"> Available</label></div><div class="row" style="padding:6px 0;border:0"><span style="width:110px">Pique</span><input id="iFp4" type="number" min="0" placeholder="Price (LKR)" style="max-width:170px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="iFa4" type="checkbox" checked style="width:auto"> Available</label></div><div class="row" style="padding:6px 0;border:0"><span style="width:110px">Single jersey</span><input id="iFp5" type="number" min="0" placeholder="Price (LKR)" style="max-width:170px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="iFa5" type="checkbox" checked style="width:auto"> Available</label></div></div>
+  </div><p class="err" id="iSetupNote" hidden>Outfit options and item prices need the latest database update. In Supabase open SQL Editor, paste everything from <b>setup-outfits.sql</b>, press Run (safe to run again), then refresh this page.</p><p class="err" id="iErr"></p>
+  <button class="solid" onclick="saveCItem()">Save item</button> <button onclick="resetCItem()">Clear</button>
+  <div id="ciList" style="margin-top:18px"></div></div>
+ </div></div>
+<div id="paneC" hidden>
+ <div class="card"><h2>Categories</h2>
+ <div style="display:flex;gap:10px"><input id="cName" placeholder="New category name (e.g. Toys)" onkeydown="if(event.key==='Enter')addCat()"><button class="solid" onclick="addCat()">Add</button></div>
+ <div id="cList" style="margin-top:12px"></div></div></div>
+<div id="paneD"><div class="card" id="dSetup" hidden><h2>One-time setup needed</h2><p>Paste everything from <strong>setup-orders.sql</strong> into Supabase <strong>SQL Editor</strong>, press <strong>Run</strong>, then refresh.</p></div>
+<div id="dMain"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 style="margin:0">Overview</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="dPer" style="width:auto" onchange="drawD()"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="0">All time</option><option value="c">Custom dates</option></select><span id="dRange" hidden><input id="dFrom" type="date" style="width:auto" onchange="drawD()"> to <input id="dTo" type="date" style="width:auto" onchange="drawD()"></span></div></div>
+<div class="kp" id="dKp"></div><div class="grid"><div class="card"><h2>Fast moving: shop items</h2><p class="hint">Most sold (pieces) in this period</p><div id="dTop"></div></div><div class="card"><h2>Fast moving: gift boxes</h2><p class="hint">Gift boxes sold, by collection</p><div id="dBox"></div></div></div>
+<div class="grid"><div class="card"><h2>Gift box pieces</h2><p class="hint">Outfits, cards and extras that went out inside gift boxes</p><div id="dPiece"></div></div><div class="card"><h2>Fabrics</h2><p class="hint">Which fabrics customers choose</p><div id="dFab"></div></div></div>
+<div class="grid"><div class="card"><h2>Colours</h2><p class="hint">Shop items and gift box pieces together</p><div id="dCol"></div></div><div class="card"><h2>Sizes</h2><p class="hint">Useful when planning what to make</p><div id="dSz"></div></div></div>
+<div class="card"><h2>Sales per day</h2><div class="days" id="dDays"></div><p class="hint" id="dDaysT" style="margin-top:6px"></p></div>
+<div class="grid"><div class="card"><h2>Payments</h2><div id="dPay"></div></div><div class="card"><h2>Not selling yet</h2><p class="hint">Visible shop items, gift boxes and gift box pieces with no sales in this period</p><div id="dSlow"></div></div></div>
+<div class="card"><h2>Waiting for payment</h2><div id="dUn"></div></div></div></div>
+<div id="paneO" hidden><div class="card"><h2>Orders</h2><p class="hint">When an order comes on WhatsApp, tap <strong>+ New order</strong> and note it here. COD orders become Paid automatically when you set them to Delivered. Bank transfers: check the slip, then tap Mark paid.</p><button class="solid" onclick="openO()">+ New order</button><div id="oList" style="margin-top:12px"></div></div></div>
+<div class="modal" id="oFm" hidden><div class="card"><h2>New order</h2><div class="grid"><div><label>Customer name *</label><input id="oName"></div><div><label>Phone</label><input id="oPhone" type="tel"></div><div><label>Payment</label><select id="oPay"><option value="cod">Cash on delivery</option><option value="bank">Bank transfer</option></select></div><div><label>Total (LKR, optional)</label><input id="oTotal" type="number" placeholder="auto from prices"></div><div class="full"><label>Items</label><div id="oLines"></div><button type="button" onclick="addLine()">+ Another item</button></div></div><p class="err" id="oErr"></p><button class="solid" onclick="saveOrder()">Save order</button> <button onclick="$('oFm').hidden=true">Cancel</button></div></div>
+<div id="paneI" hidden>
+ <div class="modal" id="fModal" hidden><div class="card"><h2 id="fTitle">Add item</h2>
+ <div class="grid">
+  <div><label>Name *</label><input id="pName"></div>
+  <div><label>Category *</label><select id="pCat"></select></div>
+  <div><label>Price (LKR)</label><input id="pPrice" type="number" min="0"></div>
+  <div><label>Badge (optional)</label><input id="pBadge" placeholder="e.g. New"></div>
+  <div><label>Sizes (comma separated)</label><input id="pSizes" placeholder="0-3m, 3-6m"><div><button type="button" class="chip" onclick="addTo('pSizes','0-3m')">0-3m</button><button type="button" class="chip" onclick="addTo('pSizes','3-6m')">3-6m</button><button type="button" class="chip" onclick="addTo('pSizes','6-12m')">6-12m</button><button type="button" class="chip" onclick="addTo('pSizes','1-2y')">1-2y</button><button type="button" class="chip" onclick="addTo('pSizes','2-3y')">2-3y</button></div></div>
+  <div class="full"><label>Colours &amp; photos</label><p class="hint" style="margin:0 0 8px">Add each colour and upload the photo of the item in that colour. On the shop, customers tap a colour and the photo changes by itself.</p><div id="vList"></div><button type="button" onclick="addV()">+ Add colour</button> <button type="button" class="chip" onclick="addV('Ivory','#F7F3EC')">Ivory</button><button type="button" class="chip" onclick="addV('Taupe','#C9BBA8')">Taupe</button><button type="button" class="chip" onclick="addV('Sage','#9CA694')">Sage</button><button type="button" class="chip" onclick="addV('Charcoal','#292827')">Charcoal</button><button type="button" class="chip" onclick="addV('Pink','#E8C4C4')">Pink</button><button type="button" class="chip" onclick="addV('Blue','#B8CCE0')">Blue</button></div>
+  <div class="full"><label>Description</label><textarea id="pDesc" rows="3"></textarea></div>
+  <div class="full"><label>Main photo (shown when a colour has no photo)</label><input id="pFile" type="file" accept="image/*" onchange="pick(this)"><div id="prev" style="margin-top:8px"></div></div>
+  <div class="full"><label style="display:flex;gap:8px;align-items:center"><input id="pActive" type="checkbox" checked style="width:auto"> Visible on the shop</label></div>
+ </div><p class="err" id="perr"></p>
+ <button class="solid" onclick="saveItem()">Save item</button> <button onclick="resetForm()">Cancel</button></div></div>
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>All items</h2><button class="solid" onclick="resetForm();$('fModal').hidden=false">+ Add item</button></div><div id="iList"></div></div></div>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script>
+<script>
+const sb=window.supabase.createClient(window.TENORA_SUPABASE.url,window.TENORA_SUPABASE.key);
+let D={categories:[],products:[]},img='',eid='';
+const FABRICS=['Twill','Linen','Oxford','Kasper','Pique','Single jersey'],SIZETYPES={baby:'Baby',kids:'Kids',women:'Women',men:'Men'};
+let G={collections:[],items:[],off:false,outOK:false},gimg='',geid='',iimg='',ieid='',curC='';
+const $=s=>document.getElementById(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ck=r=>{if(r.error)throw r.error;return r},slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'cat';
+async function login(){const{error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});if(error)$('lerr').textContent=error.message;else start()}
+async function logout(){await sb.auth.signOut();$('app').hidden=true;$('login').hidden=false}
+async function load(){const[c,p]=await Promise.all([sb.from('categories').select('*').order('sort_order').order('name'),sb.from('products').select('*').order('created_at',{ascending:false})]);ck(c);ck(p);D={categories:c.data,products:p.data};await loadG();await loadO()}
+async function start(){const{data}=await sb.auth.getSession();if(!data.session)return;try{await load();$('login').hidden=true;$('app').hidden=false;draw()}catch(e){alert(e.message)}}
+const run=async f=>{try{await f();await load();draw()}catch(e){alert(e.message||e)}};
+function tab(x){['D','O','I','G','C'].forEach(k=>{$('pane'+k).hidden=k!==x;$('tab'+k).className=k===x?'on':''})}
+function draw(){drawG();drawO();drawD();const cs=D.categories,cn=s=>(cs.find(c=>c.slug===s)||{}).name||'—';
+ $('pCat').innerHTML=cs.map(c=>`<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');
+ $('cList').innerHTML=cs.map(c=>`<div class="row"><div class="m"><strong>${esc(c.name)}</strong> <small>${D.products.filter(p=>p.category===c.slug).length} items</small></div><button onclick="renCat('${c.id}')">Rename</button><button class="del" onclick="delCat('${c.id}')">Delete</button></div>`).join('')||'<small>No categories yet.</small>';
+ $('iList').innerHTML=D.products.map(p=>`<div class="row ${p.active===false?'off':''}">${p.image_url?`<img src="${esc(p.image_url)}">`:'<div class="ph"></div>'}<div class="m"><strong>${esc(p.name)}</strong><br><small>${esc(cn(p.category))}${p.price!=null?' · LKR '+Number(p.price).toLocaleString():''}${p.active===false?' · hidden':''}</small></div><button onclick="edit('${p.id}')">Edit</button><button onclick="dup('${p.id}')">Copy</button><button onclick="toggle('${p.id}')">${p.active===false?'Show':'Hide'}</button><button class="del" onclick="delItem('${p.id}')">Delete</button></div>`).join('')||'<small>No items yet — add your first one above.</small>'}
+function addCat(){const n=$('cName').value.trim();if(!n)return;run(async()=>{let s=slug(n);if(D.categories.some(c=>c.slug===s))s+='-'+Math.random().toString(36).slice(2,5);ck(await sb.from('categories').insert({name:n,slug:s,sort_order:D.categories.length+1}));$('cName').value=''})}
+function renCat(id){const c=D.categories.find(x=>x.id===id),n=prompt('New name',c.name);if(n&&n.trim())run(async()=>ck(await sb.from('categories').update({name:n.trim()}).eq('id',id)))}
+function delCat(id){const c=D.categories.find(x=>x.id===id);if(!confirm('Delete this category?'))return;run(async()=>{if(D.products.some(p=>p.category===c.slug))throw Error('This category still has items. Delete or move them first.');ck(await sb.from('categories').delete().eq('id',id))})}
+async function pick(el){const f=el.files[0];if(!f)return;
+ const blob=await new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(r,'image/jpeg',.82)};i.src=URL.createObjectURL(f)});
+ try{const n=crypto.randomUUID()+'.jpg';ck(await sb.storage.from('product-images').upload(n,blob,{contentType:'image/jpeg',cacheControl:'31536000'}));img=sb.storage.from('product-images').getPublicUrl(n).data.publicUrl;$('prev').innerHTML=`<img src="${img}" style="height:80px">`}catch(e){$('perr').textContent=e.message}}
+const list=v=>v.split(',').map(x=>x.trim()).filter(Boolean);
+function saveItem(){const name=$('pName').value.trim();if(!name||!$('pCat').value){$('perr').textContent='Name and category are required';return}$('perr').textContent='';
+ const b={name,category:$('pCat').value,price:$('pPrice').value===''?null:Number($('pPrice').value),currency:'LKR',badge:$('pBadge').value.trim(),sizes:list($('pSizes').value),colors:V.map(v=>v.name.trim()).filter(Boolean),variants:V.filter(v=>v.name.trim()).map(v=>({name:v.name.trim(),hex:v.hex,image:v.image||''})),description:$('pDesc').value.trim(),image_url:img||(V.find(v=>v.image)||{}).image||'',active:$('pActive').checked};
+ run(async()=>{ck(eid?await sb.from('products').update(b).eq('id',eid):await sb.from('products').insert(b));resetForm()})}
+function resetForm(){eid='';img='';['pName','pPrice','pBadge','pSizes','pDesc','pFile'].forEach(i=>$(i).value='');$('pActive').checked=true;$('prev').innerHTML='';V=[];drawV();$('fTitle').textContent='Add item';$('fModal').hidden=true}
+function edit(id){const p=D.products.find(x=>x.id===id);eid=id;img=p.image_url||'';$('pName').value=p.name;$('pCat').value=p.category;$('pPrice').value=p.price??'';$('pBadge').value=p.badge||'';$('pSizes').value=(p.sizes||[]).join(', ');V=p.variants&&p.variants.length?p.variants.map(v=>({...v})):(p.colors||[]).map(n=>({name:n,hex:'#C9BBA8',image:''}));drawV();$('pDesc').value=p.description||'';$('pActive').checked=p.active!==false;$('prev').innerHTML=img?`<img src="${esc(img)}" style="height:80px">`:'';$('fTitle').textContent='Edit item';$('fModal').hidden=false}
+function toggle(id){const p=D.products.find(x=>x.id===id);run(async()=>ck(await sb.from('products').update({active:p.active===false}).eq('id',id)))}
+function delItem(id){if(confirm('Delete this item?'))run(async()=>ck(await sb.from('products').delete().eq('id',id)))}
+/* ---------- Gift collections ---------- */
+async function loadG(){const[c,i]=await Promise.all([sb.from('collections').select('*').order('sort_order').order('created_at'),sb.from('collection_items').select('*').order('sort_order').order('created_at')]);if(c.error||i.error){G={collections:[],items:[],off:true};return}const fp=await sb.from('collection_items').select('outfit,price').limit(1);G={collections:c.data,items:i.data,off:false,outOK:!fp.error}}
+async function up(f){const blob=await new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(r,'image/jpeg',.82)};i.src=URL.createObjectURL(f)});
+ const n=crypto.randomUUID()+'.jpg';ck(await sb.storage.from('product-images').upload(n,blob,{contentType:'image/jpeg',cacheControl:'31536000'}));return sb.storage.from('product-images').getPublicUrl(n).data.publicUrl}
+const thumb=u=>u?`<img src="${esc(u)}">`:'<div class="ph"></div>';
+function drawG(){$('gSetup').hidden=!G.off;$('gMain').hidden=G.off;if(G.off)return;
+ $('gList').innerHTML=G.collections.map(c=>`<div class="row ${c.active===false?'off':''}">${thumb(c.image_url)}<div class="m"><strong>${esc(c.title)}</strong><br><small>${esc(c.subtitle||'')}${c.subtitle?' · ':''}${G.items.filter(i=>i.collection_id===c.id).length} items${c.price?' · LKR '+Number(c.price).toLocaleString():''}${c.active===false?' · hidden':''}</small></div><button class="solid" onclick="openItems('${c.id}')">Items &amp; photos</button><button onclick="editColl('${c.id}')">Edit</button><button onclick="toggleColl('${c.id}')">${c.active===false?'Show':'Hide'}</button><button class="del" onclick="delColl('${c.id}')">Delete</button></div>`).join('')||'<small>No collections yet.</small>';
+ drawItems()}
+function drawItems(){const c=G.collections.find(x=>x.id===curC);$('iCard').hidden=!c;if(!c)return;$('iHead').textContent='Items in \u201c'+c.title+'\u201d';
+ const gl={any:'All',girl:'Girl only',boy:'Boy only'};$('iSetupNote').hidden=G.outOK;
+ $('ciList').innerHTML=G.items.filter(i=>i.collection_id===curC).map(i=>`<div class="row">${thumb(i.image_url)}<div class="m"><strong>${esc(i.name)}</strong><br><small>${esc(i.detail||'')}${i.detail?' · ':''}${gl[i.gender]||'All'}${i.image_url?'':' · no photo yet'}${i.outfit?' · Outfit ('+(SIZETYPES[i.size_type]||'Baby')+' sizes)':(i.price>0?' · LKR '+Number(i.price).toLocaleString():' · included free')}</small>${i.outfit&&(i.fabrics||[]).length?'<div style="margin-top:6px">'+i.fabrics.map(f=>`<button class="chip ${f.available===false?'del':''}" onclick="togFab(\'${i.id}\',\'${esc(f.name)}\')" title="Click to switch availability">${esc(f.name)} ${Number(f.price).toLocaleString()} · ${f.available===false?'Not available':'Available'}</button>`).join('')+'</div>':''}</div><button onclick="editCItem('${i.id}')">Edit</button><button class="del" onclick="delCItem('${i.id}')">Delete</button></div>`).join('')||'<small>No items yet. Add the first one above.</small>'}
+async function pickG(el){const f=el.files[0];if(!f)return;try{gimg=await up(f);$('gPrev').innerHTML=`<img src="${gimg}" style="height:80px">`}catch(e){$('gErr').textContent=e.message}}
+async function pickI(el){const f=el.files[0];if(!f)return;try{$('iErr').textContent='Uploading\u2026';iimg=await up(f);$('iErr').textContent='';$('iPrev').innerHTML=`<img src="${iimg}" style="height:80px">`}catch(e){$('iErr').textContent=e.message}}
+function saveColl(){const t=$('gName').value.trim();if(!t){$('gErr').textContent='Title is required';return}$('gErr').textContent='';
+ const b={title:t,subtitle:$('gSub').value.trim(),description:$('gDesc').value.trim(),image_url:gimg,active:$('gActive').checked};const gp=$('gPrice').value;if(gp!==''||(geid&&'price' in G.collections.find(c=>c.id===geid)))b.price=gp===''?null:Number(gp);
+ run(async()=>{if(geid)ck(await sb.from('collections').update(b).eq('id',geid));else{let s=slug(t);if(G.collections.some(c=>c.slug===s))s+='-'+Math.random().toString(36).slice(2,5);ck(await sb.from('collections').insert({...b,slug:s,sort_order:G.collections.length+1}))}resetColl()})}
+function resetColl(){geid='';gimg='';['gName','gSub','gDesc','gPrice','gFile'].forEach(i=>$(i).value='');$('gActive').checked=true;$('gPrev').innerHTML='';$('gTitle').textContent='Add collection'}
+function editColl(id){const c=G.collections.find(x=>x.id===id);geid=id;gimg=c.image_url||'';$('gName').value=c.title;$('gSub').value=c.subtitle||'';$('gPrice').value=c.price??'';$('gDesc').value=c.description||'';$('gActive').checked=c.active!==false;$('gPrev').innerHTML=gimg?`<img src="${esc(gimg)}" style="height:80px">`:'';$('gTitle').textContent='Edit collection';scrollTo({top:0,behavior:'smooth'})}
+function toggleColl(id){const c=G.collections.find(x=>x.id===id);run(async()=>ck(await sb.from('collections').update({active:c.active===false}).eq('id',id)))}
+function delColl(id){if(!confirm('Delete this collection and all its items?'))return;if(curC===id)curC='';run(async()=>ck(await sb.from('collections').delete().eq('id',id)))}
+function openItems(id){curC=id;resetCItem();drawItems();$('iCard').scrollIntoView({behavior:'smooth'})}
+function saveCItem(){const n=$('iName').value.trim();if(!n){$('iErr').textContent='Item name is required';return}$('iErr').textContent='';
+ const b={collection_id:curC,name:n,detail:$('iDetail').value.trim(),gender:$('iGender').value,image_url:iimg};
+ if(G.outOK){const o=$('iOutfit').checked;b.price=(!o&&$('iPrice').value!=='')?Number($('iPrice').value):null;b.outfit=o;b.size_type=$('iSizeType').value;b.fabrics=o?FABRICS.map((n,k)=>({name:n,price:Number($('iFp'+k).value),available:$('iFa'+k).checked})).filter(f=>f.price>0):[]}
+ run(async()=>{if(ieid)ck(await sb.from('collection_items').update(b).eq('id',ieid));else ck(await sb.from('collection_items').insert({...b,sort_order:G.items.filter(i=>i.collection_id===curC).length+1}));resetCItem()})}
+function resetCItem(){ieid='';iimg='';['iName','iDetail','iFile'].forEach(i=>$(i).value='');$('iGender').value='any';$('iPrev').innerHTML='';$('iFormTitle').textContent='Add item';$('iOutfit').checked=false;$('iOutBox').hidden=true;$('iPriceBox').hidden=false;$('iPrice').value='';$('iSizeType').value='baby';FABRICS.forEach((n,k)=>{$('iFp'+k).value='';$('iFa'+k).checked=true})}
+function editCItem(id){const i=G.items.find(x=>x.id===id);ieid=id;iimg=i.image_url||'';$('iName').value=i.name;$('iDetail').value=i.detail||'';$('iGender').value=i.gender||'any';$('iPrev').innerHTML=iimg?`<img src="${esc(iimg)}" style="height:80px">`:'';$('iFormTitle').textContent='Edit item';$('iOutfit').checked=!!i.outfit;$('iOutBox').hidden=!i.outfit;$('iPriceBox').hidden=!!i.outfit;$('iPrice').value=i.price??'';$('iSizeType').value=i.size_type||'baby';FABRICS.forEach((n,k)=>{const f=(i.fabrics||[]).find(x=>x.name===n);$('iFp'+k).value=f?f.price:'';$('iFa'+k).checked=f?f.available!==false:true});$('iCard').scrollIntoView({behavior:'smooth'})}
+function togFab(id,name){const i=G.items.find(x=>x.id===id);const fl=(i.fabrics||[]).map(f=>f.name===name?{...f,available:f.available===false}:f);run(async()=>ck(await sb.from('collection_items').update({fabrics:fl}).eq('id',id)))}
+function delCItem(id){if(confirm('Delete this item?'))run(async()=>ck(await sb.from('collection_items').delete().eq('id',id)))}
+
+const addTo=(id,v)=>{const e=$(id);e.value=e.value.trim()?e.value.replace(/,\s*$/,'')+', '+v:v};
+function dup(id){edit(id);eid='';$('pName').value+=' (copy)';$('fTitle').textContent='Add item (copy)'}
+let O={rows:[],off:false};
+async function loadO(){const r=await sb.from('orders').select('*').order('created_at',{ascending:false});O=r.error?{rows:[],off:true}:{rows:r.data,off:false}}
+const money=n=>'LKR '+Math.round(n).toLocaleString();
+const lineHtml=()=>`<div class="oline"><select class="op">${D.products.map(p=>`<option value="${p.id}">${esc(p.name)}${p.price!=null?' - '+p.price:''}</option>`).join('')}</select><input class="oq" type="number" min="1" value="1"></div>`;
+function addLine(){$('oLines').insertAdjacentHTML('beforeend',lineHtml())}
+function openO(){['oName','oPhone','oTotal'].forEach(i=>$(i).value='');$('oLines').innerHTML='';addLine();$('oErr').textContent='';$('oFm').hidden=false}
+function saveOrder(){const items=[...document.querySelectorAll('.oline')].map(l=>{const p=D.products.find(x=>x.id===l.querySelector('.op').value);return p&&{product_id:p.id,name:p.name,qty:Math.max(1,+l.querySelector('.oq').value||1),price:+p.price||0}}).filter(Boolean);
+ if(!items.length||!$('oName').value.trim()){$('oErr').textContent='Customer name and an item are required';return}
+ const total=$('oTotal').value!==''?+$('oTotal').value:items.reduce((s,i)=>s+i.qty*i.price,0);
+ run(async()=>{ck(await sb.from('orders').insert({customer_name:$('oName').value.trim(),phone:$('oPhone').value.trim(),pay_method:$('oPay').value,items,total}));$('oFm').hidden=true})}
+function setSt(id,st){const o=O.rows.find(x=>x.id===id),u={status:st};if(st==='delivered'&&o.pay_method==='cod')u.paid=true;run(async()=>ck(await sb.from('orders').update(u).eq('id',id)))}
+function togPaid(id){const o=O.rows.find(x=>x.id===id);run(async()=>ck(await sb.from('orders').update({paid:!o.paid}).eq('id',id)))}
+function delO(id){if(confirm('Delete this order?'))run(async()=>ck(await sb.from('orders').delete().eq('id',id)))}
+function drawO(){if(O.off){$('oList').innerHTML='<small>Orders are not set up yet. See the Dashboard tab.</small>';return}
+ const st=['new','confirmed','packed','delivered','cancelled'];
+ $('oList').innerHTML=O.rows.map(o=>`<div class="row ${o.status==='cancelled'?'off':''}"><div class="m"><strong>#${o.order_no} ${esc(o.customer_name)}</strong> <small>${esc(o.phone||'')} · ${new Date(o.created_at).toLocaleDateString()}</small><br>${o.address?'<small>'+esc(o.address)+'</small><br>':''}<small>${(o.items||[]).map(i=>esc(i.name)+([i.detail,i.size,i.fabric,i.color].filter(Boolean).length?' ('+esc([i.detail,i.size,i.fabric,i.color].filter(Boolean).join(', '))+')':'')+' x'+i.qty).join(', ')} · ${money(o.total)} · ${o.pay_method==='cod'?'COD':'Bank'}</small></div><span class="pill ${o.paid?'ok':'no'}">${o.paid?'Paid':'Unpaid'}</span><select onchange="setSt('${o.id}',this.value)">${st.map(x=>`<option ${x===o.status?'selected':''}>${x}</option>`).join('')}</select><button onclick="togPaid('${o.id}')">${o.paid?'Mark unpaid':'Mark paid'}</button><button class="del" onclick="delO('${o.id}')">Delete</button></div>`).join('')||'<small>No orders yet.</small>'}
+function drawD(){$('dSetup').hidden=!O.off;$('dMain').hidden=O.off;if(O.off)return;
+ const v=$('dPer').value,cu=v==='c',ld=t=>{const x=new Date(t);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};$('dRange').hidden=!cu;
+ let from=0,to=Date.now()+864e5;if(cu){if(!$('dFrom').value){$('dFrom').value=ld(Date.now()-29*864e5);$('dTo').value=ld(Date.now())}from=new Date($('dFrom').value+'T00:00:00').getTime();to=new Date($('dTo').value+'T23:59:59').getTime()}else if(+v)from=Date.now()-v*864e5;
+ const d=+v,R=O.rows.filter(o=>{const t=new Date(o.created_at).getTime();return o.status!=='cancelled'&&t>=from&&t<=to}),sum=a=>a.reduce((s,o)=>s+Number(o.total),0),un=R.filter(o=>!o.paid);
+ $('dKp').innerHTML=[['Sales',money(sum(R))],['Orders',R.length],['Paid',money(sum(R.filter(o=>o.paid)))],['Waiting for payment',money(sum(un))]].map(k=>`<div><small>${k[0]}</small><b>${k[1]}</b></div>`).join('');
+ const shopM={},boxM={},pieceM={},fabM={},colM={},szM={},add=(o,k,n,q,x)=>{o[k]=o[k]||{name:n,q:0,sub:x||''};o[k].q+=q},bt=i=>String(i.name||'').replace(' (gift box)','');
+ R.forEach(o=>(o.items||[]).forEach(i=>{const q=+i.qty||1;
+  if(i.collection){add(boxM,i.collection,bt(i),q);const sl=Array.isArray(i.sel)?i.sel:[];
+   sl.forEach(s=>{add(pieceM,i.collection+'|'+s.item,s.item,q,bt(i));if(s.fabric)add(fabM,s.fabric,s.fabric,q);if(s.color)add(colM,s.color,s.color,q);if(s.size)add(szM,s.size,s.size,q)});
+   if(!sl.length){if(i.color)add(colM,i.color,i.color,q);if(i.size)add(szM,i.size,i.size,q)}}
+  else{add(shopM,i.product_id||i.name,i.name,q);if(i.color)add(colM,i.color,i.color,q);if(i.size)add(szM,i.size,i.size,q)}}));
+ const bars=(o,n=6)=>{const l=Object.values(o).sort((x,y)=>y.q-x.q).slice(0,n),mx=l[0]?l[0].q:1;return l.map(t=>`<div class="bar"><span>${esc(t.name)}${t.sub?'<br><small>'+esc(t.sub)+'</small>':''}</span><i style="width:${t.q/mx*100}%"></i><b>${t.q} pcs</b></div>`).join('')||'<small>No sales in this period yet.</small>'};
+ $('dTop').innerHTML=bars(shopM);$('dBox').innerHTML=bars(boxM);$('dPiece').innerHTML=bars(pieceM,8);$('dFab').innerHTML=bars(fabM);$('dCol').innerHTML=bars(colM);$('dSz').innerHTML=bars(szM,8);
+ const e=cu?to:Date.now(),n=cu?Math.max(1,Math.min(60,Math.ceil((to-from)/864e5))):Math.min(d||30,30),ds=[];for(let i=n-1;i>=0;i--){const x=new Date(e-i*864e5).toDateString();ds.push(sum(R.filter(o=>new Date(o.created_at).toDateString()===x)))}
+ const dm=Math.max(...ds,1);$('dDays').innerHTML=ds.map(v=>`<i title="${money(v)}" style="height:${v/dm*100}%"></i>`).join('');$('dDaysT').textContent=(cu?$('dFrom').value+' to '+$('dTo').value:'Last '+n+' days')+', left = oldest';
+ const c=k=>R.filter(o=>o.pay_method===k).length;$('dPay').innerHTML=`<div class="bar"><span>Cash on delivery</span><i style="width:${c('cod')/(R.length||1)*100}%"></i><b>${c('cod')}</b></div><div class="bar"><span>Bank transfer</span><i style="width:${c('bank')/(R.length||1)*100}%"></i><b>${c('bank')}</b></div>`;
+ const nsl=[];D.products.filter(p=>p.active!==false&&!shopM[p.id]&&!shopM[p.name]).forEach(p=>nsl.push([p.name,'Shop item']));
+ G.collections.filter(c=>c.active!==false&&!boxM[c.slug]).forEach(c=>nsl.push([c.title,'Gift box']));
+ G.items.filter(i=>i.outfit).forEach(i=>{const c=G.collections.find(x=>x.id===i.collection_id);if(c&&c.active!==false&&!pieceM[c.slug+'|'+i.name])nsl.push([i.name,'Piece in '+c.title])});
+ $('dSlow').innerHTML=nsl.slice(0,12).map(x=>`<div>${esc(x[0])} <small>${esc(x[1])}</small></div>`).join('')||'<small>Everything is selling.</small>';
+ $('dUn').innerHTML=un.map(o=>`<div class="row"><div class="m"><strong>#${o.order_no} ${esc(o.customer_name)}</strong> <small>${new Date(o.created_at).toLocaleDateString()} · ${o.pay_method==='cod'?'COD':'Bank'}</small></div><b>${money(o.total)}</b><button onclick="togPaid('${o.id}')">Mark paid</button></div>`).join('')||'<small>Nothing waiting.</small>'}
+
+let V=[];
+function addV(n,h){V.push({name:n||'',hex:h||'#C9BBA8',image:''});drawV()}
+function drawV(){$('vList').innerHTML=V.map((v,i)=>`<div class="row" style="padding:8px 0"><input type="color" value="${esc(v.hex)}" style="width:44px;padding:2px" onchange="V[${i}].hex=this.value"><input value="${esc(v.name)}" placeholder="Colour name" style="width:140px" oninput="V[${i}].name=this.value">${thumb(v.image)}<label class="btn" style="margin:0;cursor:pointer">${v.image?'Change photo':'Upload photo'}<input type="file" accept="image/*" hidden onchange="pickV(${i},this)"></label><button type="button" class="del" onclick="V.splice(${i},1);drawV()">Remove</button></div>`).join('')}
+async function pickV(i,el){const f=el.files[0];if(!f)return;try{V[i].image=await up(f);drawV()}catch(e){$('perr').textContent=e.message}}
+
+start();
+</script></body></html>
