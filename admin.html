@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TENORA Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--iv:#F7F3EC;--tp:#C9BBA8;--sg:#9CA694;--ink:#292827;--ln:rgba(41,40,39,.16)}
+*{box-sizing:border-box}body{margin:0;background:var(--iv);color:var(--ink);font:300 15px/1.5 Jost,system-ui,sans-serif}
+h1,h2{font-family:'Cormorant Garamond',serif;font-weight:500;margin:0}
+h1{letter-spacing:.3em;font-size:22px}h2{font-size:26px;margin-bottom:14px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;border-bottom:1px solid var(--ln);background:#fff}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px}
+.tabs{display:flex;gap:8px;margin-bottom:24px}
+button,.btn{font:400 13px Jost,sans-serif;letter-spacing:.06em;padding:10px 18px;border:1px solid var(--ln);background:transparent;color:var(--ink);cursor:pointer;border-radius:2px}
+button.on,button.solid{background:var(--ink);color:var(--iv);border-color:var(--ink)}button.solid:hover{background:var(--sg);border-color:var(--sg)}
+button.del{color:#a33;border-color:#e3c4c4}
+.card{background:#fff;border:1px solid var(--ln);padding:20px;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}
+label{display:block;font-size:12px;letter-spacing:.08em;margin-bottom:4px;color:rgba(41,40,39,.65)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--ln);background:var(--iv);font:inherit;border-radius:2px}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--ln);flex-wrap:wrap}
+.row img,.ph{width:52px;height:52px;object-fit:cover;background:var(--tp);border-radius:2px;flex:none}
+.row .m{flex:1;min-width:150px}.hint{font-size:12px;color:rgba(41,40,39,.6);margin:0 0 14px}.tabs{flex-wrap:wrap}.row small{color:rgba(41,40,39,.6)}.off{opacity:.45}
+.login{max-width:340px;margin:12vh auto}.err{color:#a33;font-size:13px;min-height:18px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.vc{border:1px solid var(--ln);padding:12px;margin-bottom:10px;background:#fff}
+.vh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.vh input[type=color]{width:38px;height:32px;padding:2px;flex:none}
+.vp{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.vt{position:relative;width:84px}
+.vt img{width:84px;height:104px;object-fit:cover;border-radius:2px;display:block;background:var(--tp)}
+.vt em{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:center;color:rgba(41,40,39,.6);margin-top:3px;font-style:normal}
+.vx,.vm{position:absolute;top:3px;padding:0;width:22px;height:22px;line-height:20px;border-radius:50%;background:#fff;font-size:13px}
+.vx{right:3px}.vm{left:3px;font-size:9px}
+.pr-g{margin-bottom:14px}.pr-g h4{margin:0 0 6px;font:500 12px Jost,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:rgba(41,40,39,.65)}.pr-r{display:flex;align-items:center;gap:10px;margin-bottom:6px}.pr-r span{flex:1;min-width:90px}.pr-r input{width:130px}.pr-r em{font-style:normal;font-size:12px;color:rgba(41,40,39,.6);min-width:90px}
+.vadd{width:84px;height:104px;border:1px dashed var(--sg);display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;cursor:pointer;margin:0;color:var(--ink);padding:6px}
+</style></head><body>
+<div id="login" class="login card"><h1>TENORA</h1><p>Admin sign in</p>
+<input id="em" type="email" placeholder="Email" style="margin-bottom:8px"><input id="pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')login()"><p class="err" id="lerr"></p><button class="solid" onclick="login()">Sign in</button></div>
+<div id="app" hidden>
+<header><h1>TENORA <small style="font-family:Jost;letter-spacing:.1em;font-size:12px">ADMIN</small></h1><span><a href="/" target="_blank">View shop</a> &nbsp; <button onclick="logout()">Sign out</button></span></header>
+<div class="wrap">
+<div class="tabs"><button id="tabI" class="on" onclick="tab('I')">Items</button><button id="tabG" onclick="tab('G')">Gift collections</button><button id="tabC" onclick="tab('C')">Categories</button><button id="tabP" onclick="tab('P')">Photos</button></div>
+<div id="paneP" hidden>
+ <div class="card" id="phSetup" hidden><h2>One-time setup needed</h2><p>The photo strip is not set up in your database yet. In Supabase open <strong>SQL Editor</strong>, paste everything from <strong>setup-gallery.sql</strong>, press <strong>Run</strong>, then refresh this page.</p></div>
+ <div id="phMain">
+ <p class="hint">These photos move across the home page, above "Our story". Add offers or new photos here. Until you add one, the shop shows its 4 default photos.</p>
+ <div class="card"><h2 id="phTitle">Add photo</h2>
+ <div class="grid">
+  <div class="full"><label>Photo *</label><input id="phFile" type="file" accept="image/*" onchange="pickP(this)"><div id="phPrev" style="margin-top:8px"></div></div>
+  <div><label>Caption</label><input id="phCap" placeholder="e.g. Avurudu Gift Box"></div>
+  <div><label>Small label (optional)</label><input id="phLabel" placeholder="e.g. Offer, New, Gift"></div>
+  <div class="full"><label>When tapped (optional)</label><input id="phLink" placeholder="leave empty to just open the photo larger"><p class="hint" style="margin:6px 0 0">Web link: <code>https://...</code> &nbsp;|&nbsp; WhatsApp message: <code>wa:Hi TENORA, I want the Avurudu offer</code> &nbsp;|&nbsp; Open a gift collection: <code>collection:newborn</code></p></div>
+  <div class="full"><label style="display:flex;gap:8px;align-items:center"><input id="phActive" type="checkbox" checked style="width:auto"> Visible on the shop</label></div>
+ </div><p class="err" id="phErr"></p>
+ <button class="solid" onclick="saveP()">Save photo</button> <button onclick="resetP()">Clear</button></div>
+ <div class="card"><h2>All photos</h2><div id="phList"></div></div></div>
+</div>
+<div id="paneG" hidden>
+ <div class="card" id="gSetup" hidden><h2>One-time setup needed</h2><p>Gift collections are not set up in your database yet. In Supabase open <strong>SQL Editor</strong>, paste everything from <strong>setup-collections.sql</strong>, press <strong>Run</strong>, then refresh this page.</p></div>
+ <div id="gMain">
+ <p class="hint">Each collection is a gift box moment (e.g. "For a newborn") shown on the shop's Collections tab. Add items to it with a photo, and mark them for Girl, Boy or All.</p>
+ <div class="card"><h2 id="gTitle">Add collection</h2>
+  <div class="grid">
+   <div><label>Title *</label><input id="gName" placeholder="For a newborn"></div>
+   <div><label>Subtitle</label><input id="gSub" placeholder="First arrivals"></div>
+   <div class="full"><label>Description</label><textarea id="gDesc" rows="3"></textarea></div>
+   <div class="full"><label>Cover photo (optional, shown big at the top)</label><input id="gFile" type="file" accept="image/*" onchange="pickG(this)"><div id="gPrev" style="margin-top:8px"></div></div>
+   <div class="full"><label style="display:flex;gap:8px;align-items:center"><input id="gActive" type="checkbox" checked style="width:auto"> Visible on the shop</label></div>
+  </div><p class="err" id="gErr"></p>
+  <button class="solid" onclick="saveColl()">Save collection</button> <button onclick="resetColl()">Clear</button></div>
+ <div class="card"><h2>All collections</h2><div id="gList"></div></div>
+ <div class="card" id="iCard" hidden><h2 id="iHead">Items</h2>
+  <p class="hint" id="iFormTitle">Add item</p>
+  <div class="grid">
+   <div><label>Item name *</label><input id="iName" placeholder="Soft bodysuit"></div>
+   <div><label>Short detail</label><input id="iDetail" placeholder="Everyday essential"></div>
+   <div><label>For</label><select id="iGender"><option value="any">All (girl, boy and neutral)</option><option value="girl">Girl only</option><option value="boy">Boy only</option></select></div>
+   <div><label>Photo</label><input id="iFile" type="file" accept="image/*" onchange="pickI(this)"><div id="iPrev" style="margin-top:8px"></div></div>
+  </div><p class="err" id="iErr"></p>
+  <button class="solid" onclick="saveCItem()">Save item</button> <button onclick="resetCItem()">Clear</button>
+  <div id="ciList" style="margin-top:18px"></div></div>
+ </div></div>
+<div id="paneC" hidden>
+ <div class="card"><h2>Categories</h2>
+ <div style="display:flex;gap:10px"><input id="cName" placeholder="New category name (e.g. Toys)" onkeydown="if(event.key==='Enter')addCat()"><button class="solid" onclick="addCat()">Add</button></div>
+ <div id="cList" style="margin-top:12px"></div></div></div>
+<div id="paneI">
+ <div class="card"><h2 id="fTitle">Add item</h2>
+ <div class="grid">
+  <div><label>Name *</label><input id="pName"></div>
+  <div><label>Category *</label><select id="pCat"></select></div>
+  <div><label>Price (LKR)</label><input id="pPrice" type="number" min="0"></div>
+  <div><label>Badge (optional)</label><input id="pBadge" placeholder="e.g. New"></div>
+  <div><label>Sizes (comma separated)</label><input id="pSizes" placeholder="0-3m, 3-6m" onchange="drawPrice()"></div>
+  <div><label>Colours (comma separated)</label><input id="pColors" placeholder="Ivory, Sage" onchange="syncVars();drawVars();drawPrice()"></div>
+  <div><label>Materials (comma separated, optional)</label><input id="pMats" placeholder="Cotton, Linen, Muslin" onchange="drawPrice()"></div>
+  <div class="full"><label>Price differences (optional)</label><p class="hint">Price (LKR) above is the base price. If a size, colour or material costs more (or less), type the difference here. Leave 0 if the price is the same. The shop adds them up automatically, e.g. base 3000 + size 6-12m (+500) + Linen (+800) = 4300. First type the Sizes / Colours / Materials above, then click outside the box.</p><div id="pPriceBox"></div></div>
+  <div class="full"><label>Description</label><textarea id="pDesc" rows="3"></textarea></div>
+  <div class="full"><label>Main photo (shown on the shop card)</label><input id="pFile" type="file" accept="image/*" onchange="pick(this)"><div id="prev" style="margin-top:8px"></div></div>
+  <div class="full"><label>Colour photos</label><p class="hint">Type the colours above, then click outside the box. A photo area appears for each colour: add as many photos as you like (the first is the cover). Customers see these photos when they pick that colour.</p><div id="pVars"></div></div>
+  <div class="full"><label style="display:flex;gap:8px;align-items:center"><input id="pActive" type="checkbox" checked style="width:auto"> Visible on the shop</label></div>
+ </div><p class="err" id="perr"></p>
+ <button class="solid" onclick="saveItem()">Save item</button> <button onclick="resetForm()">Clear</button></div>
+ <div class="card"><h2>All items</h2><div id="iList"></div></div></div>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script>
+<script>
+const sb=window.supabase.createClient(window.TENORA_SUPABASE.url,window.TENORA_SUPABASE.key);
+let D={categories:[],products:[]},img='',eid='';
+let G={collections:[],items:[],off:false},gimg='',geid='',iimg='',ieid='',curC='';
+const $=s=>document.getElementById(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ck=r=>{if(r.error)throw r.error;return r},slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'cat';
+async function login(){const{error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});if(error)$('lerr').textContent=error.message;else start()}
+async function logout(){await sb.auth.signOut();$('app').hidden=true;$('login').hidden=false}
+async function load(){const[c,p]=await Promise.all([sb.from('categories').select('*').order('sort_order').order('name'),sb.from('products').select('*').order('created_at',{ascending:false})]);ck(c);ck(p);D={categories:c.data,products:p.data};await loadG();await loadP()}
+async function start(){const{data}=await sb.auth.getSession();if(!data.session)return;try{await load();$('login').hidden=true;$('app').hidden=false;draw()}catch(e){alert(e.message)}}
+const run=async f=>{try{await f();await load();draw()}catch(e){alert(e.message||e)}};
+function tab(x){['I','C','G','P'].forEach(k=>{$('pane'+k).hidden=x!==k;$('tab'+k).className=x===k?'on':''})}
+function draw(){drawG();drawP();const cs=D.categories,cn=s=>(cs.find(c=>c.slug===s)||{}).name||'—';
+ $('pCat').innerHTML=cs.map(c=>`<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');
+ $('cList').innerHTML=cs.map(c=>`<div class="row"><div class="m"><strong>${esc(c.name)}</strong> <small>${D.products.filter(p=>p.category===c.slug).length} items</small></div><button onclick="renCat('${c.id}')">Rename</button><button class="del" onclick="delCat('${c.id}')">Delete</button></div>`).join('')||'<small>No categories yet.</small>';
+ $('iList').innerHTML=D.products.map(p=>`<div class="row ${p.active===false?'off':''}">${p.image_url?`<img src="${esc(p.image_url)}">`:'<div class="ph"></div>'}<div class="m"><strong>${esc(p.name)}</strong><br><small>${esc(cn(p.category))}${p.price!=null?' · LKR '+Number(p.price).toLocaleString():''}${p.active===false?' · hidden':''}</small></div><button onclick="edit('${p.id}')">Edit</button><button onclick="toggle('${p.id}')">${p.active===false?'Show':'Hide'}</button><button class="del" onclick="delItem('${p.id}')">Delete</button></div>`).join('')||'<small>No items yet — add your first one above.</small>'}
+function addCat(){const n=$('cName').value.trim();if(!n)return;run(async()=>{let s=slug(n);if(D.categories.some(c=>c.slug===s))s+='-'+Math.random().toString(36).slice(2,5);ck(await sb.from('categories').insert({name:n,slug:s,sort_order:D.categories.length+1}));$('cName').value=''})}
+function renCat(id){const c=D.categories.find(x=>x.id===id),n=prompt('New name',c.name);if(n&&n.trim())run(async()=>ck(await sb.from('categories').update({name:n.trim()}).eq('id',id)))}
+function delCat(id){const c=D.categories.find(x=>x.id===id);if(!confirm('Delete this category?'))return;run(async()=>{if(D.products.some(p=>p.category===c.slug))throw Error('This category still has items. Delete or move them first.');ck(await sb.from('categories').delete().eq('id',id))})}
+async function pick(el){const f=el.files[0];if(!f)return;
+ const blob=await new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height);c.toBlob(r,'image/jpeg',.82)};i.src=URL.createObjectURL(f)});
+ try{const n=crypto.randomUUID()+'.jpg';ck(await sb.storage.from('product-images').upload(n,blob,{contentType:'image/jpeg',cacheControl:'31536000'}));img=sb.storage.from('product-images').getPublicUrl(n).data.publicUrl;$('prev').innerHTML=`<img src="${img}" style="height:80px">`}catch(e){$('perr').textContent=e.message}}
+const list=v=>v.split(',').map(x=>x.trim()).filter(Boolean);
+let VAR=[];
+let PR={sizes:{},colors:{},materials:{}},hadPR=false;
+function drawPrice(){const grp=[['sizes','Size',list($('pSizes').value)],['colors','Colour',list($('pColors').value)],['materials','Material',list($('pMats').value)]];
+ $('pPriceBox').innerHTML=grp.map(([k,t,a])=>a.length?`<div class="pr-g"><h4>${t}</h4>${a.map(n=>`<div class="pr-r"><span>${esc(n)}</span><em>extra LKR</em><input type="number" step="1" placeholder="0" data-g="${k}" data-n="${esc(n)}" value="${PR[k][n]?PR[k][n]:''}"></div>`).join('')}</div>`:'').join('')||'<small>Add sizes, colours or materials above to set price differences.</small>'}
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.g&&t.closest('#pPriceBox'))PR[t.dataset.g][t.dataset.n]=Number(t.value)||0});
+function buildPricing(){const pick=(k,a)=>{const o={};a.forEach(n=>{const v=Number(PR[k][n])||0;if(v)o[n]=v});return o};
+ const mats=list($('pMats').value).map(n=>({name:n,extra:Number(PR.materials[n])||0}));
+ return{sizes:pick('sizes',list($('pSizes').value)),colors:pick('colors',list($('pColors').value)),materials:mats}}
+const HEX={black:'#292827',charcoal:'#3A3938',white:'#FFFFFF',ivory:'#F7F3EC',cream:'#F3EBDD',beige:'#D9C7A8',sand:'#D9C7A8',taupe:'#C9BBA8',sage:'#9CA694',green:'#8FAE8B',mint:'#BFE0CF',blue:'#A9C1E0',sky:'#B7CAD6',navy:'#2B3A55',pink:'#EBC4CC',blush:'#E6C6BE',peach:'#F0C3A0',red:'#C0392B',yellow:'#E8D48A',brown:'#8B6B4F',grey:'#B5B5B5',gray:'#B5B5B5',lilac:'#BBA6D0',purple:'#9C86B8',orange:'#E69A5C'};
+const guessHex=n=>{n=String(n).toLowerCase();for(const k in HEX)if(n.includes(k))return HEX[k];return '#C9BBA8'};
+function syncVars(){const old=VAR;VAR=list($('pColors').value).map(n=>{const o=old.find(v=>v.name.toLowerCase()===n.toLowerCase());if(o){o.name=n;return o}return{name:n,hex:guessHex(n),images:[]}})}
+function drawVars(){$('pVars').innerHTML=VAR.map((v,i)=>`<div class="vc"><div class="vh"><input type="color" value="${esc(v.hex)}" onchange="VAR[${i}].hex=this.value" title="Colour shown on the shop"><strong>${esc(v.name)}</strong><small>${v.images.length} photo${v.images.length===1?'':'s'}</small></div><div class="vp">${v.images.map((u,j)=>`<div class="vt"><img src="${esc(u)}" alt=""><button type="button" class="vx" onclick="vDel(${i},${j})" title="Remove">&times;</button>${j?`<button type="button" class="vm" onclick="vMove(${i},${j})" title="Move left">&#9664;</button><em>&nbsp;</em>`:'<em>Cover</em>'}</div>`).join('')}<label class="vadd">+ Add photos<input type="file" accept="image/*" multiple hidden onchange="vUp(${i},this)"></label></div></div>`).join('')}
+function vDel(i,j){VAR[i].images.splice(j,1);drawVars()}
+function vMove(i,j){const a=VAR[i].images;[a[j-1],a[j]]=[a[j],a[j-1]];drawVars()}
+async function vUp(i,el){const fs=[...el.files];el.value='';if(!fs.length)return;try{for(let k=0;k<fs.length;k++){$('perr').textContent='Uploading photo '+(k+1)+' of '+fs.length+'\u2026';VAR[i].images.push(await up(fs[k],1400))}$('perr').textContent=''}catch(e){$('perr').textContent=e.message}drawVars()}
+function saveItem(){syncVars();const name=$('pName').value.trim();if(!name||!$('pCat').value){$('perr').textContent='Name and category are required';return}$('perr').textContent='';
+ const b={name,category:$('pCat').value,price:$('pPrice').value===''?null:Number($('pPrice').value),currency:'LKR',badge:$('pBadge').value.trim(),sizes:list($('pSizes').value),colors:VAR.map(v=>v.name),variants:VAR.map(v=>({name:v.name,hex:v.hex,image:v.images[0]||'',images:v.images})),description:$('pDesc').value.trim(),image_url:img||((VAR.find(v=>v.images[0])||{images:['']}).images[0]),active:$('pActive').checked};
+ const pr=buildPricing();if(hadPR||pr.materials.length||Object.keys(pr.sizes).length||Object.keys(pr.colors).length)b.pricing=pr;
+ run(async()=>{ck(eid?await sb.from('products').update(b).eq('id',eid):await sb.from('products').insert(b));resetForm()})}
+function resetForm(){eid='';img='';PR={sizes:{},colors:{},materials:{}};hadPR=false;['pName','pPrice','pBadge','pSizes','pColors','pMats','pDesc','pFile'].forEach(i=>$(i).value='');$('pActive').checked=true;$('prev').innerHTML='';$('fTitle').textContent='Add item';VAR=[];drawVars();drawPrice()}
+function edit(id){const p=D.products.find(x=>x.id===id);eid=id;img=p.image_url||'';$('pName').value=p.name;$('pCat').value=p.category;$('pPrice').value=p.price??'';$('pBadge').value=p.badge||'';$('pSizes').value=(p.sizes||[]).join(', ');$('pColors').value=(p.colors||[]).join(', ');$('pDesc').value=p.description||'';$('pActive').checked=p.active!==false;$('prev').innerHTML=img?`<img src="${esc(img)}" style="height:80px">`:'';$('fTitle').textContent='Edit item';VAR=(Array.isArray(p.variants)&&p.variants.length?p.variants:(p.colors||[]).map(n=>({name:n}))).filter(v=>v&&v.name).map(v=>({name:v.name,hex:v.hex||guessHex(v.name),images:Array.isArray(v.images)&&v.images.length?[...v.images]:(v.image?[v.image]:[])}));$('pColors').value=VAR.map(v=>v.name).join(', ');
+ const pr=(p.pricing&&typeof p.pricing==='object')?p.pricing:{};hadPR=p.pricing!==undefined;PR={sizes:{...(pr.sizes||{})},colors:{...(pr.colors||{})},materials:{}};(pr.materials||[]).forEach(m=>{if(m&&m.name)PR.materials[m.name]=Number(m.extra)||0});$('pMats').value=(pr.materials||[]).map(m=>m.name).join(', ');
+ drawVars();drawPrice();scrollTo({top:0,behavior:'smooth'})}
+function toggle(id){const p=D.products.find(x=>x.id===id);run(async()=>ck(await sb.from('products').update({active:p.active===false}).eq('id',id)))}
+function delItem(id){if(confirm('Delete this item?'))run(async()=>ck(await sb.from('products').delete().eq('id',id)))}
+/* ---------- Gift collections ---------- */
+async function loadG(){const[c,i]=await Promise.all([sb.from('collections').select('*').order('sort_order').order('created_at'),sb.from('collection_items').select('*').order('sort_order').order('created_at')]);if(c.error||i.error){G={collections:[],items:[],off:true};return}G={collections:c.data,items:i.data,off:false}}
+async function up(f,mx=900){const blob=await new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,mx/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height);c.toBlob(r,'image/jpeg',.85)};i.src=URL.createObjectURL(f)});
+ const n=crypto.randomUUID()+'.jpg';ck(await sb.storage.from('product-images').upload(n,blob,{contentType:'image/jpeg',cacheControl:'31536000'}));return sb.storage.from('product-images').getPublicUrl(n).data.publicUrl}
+const thumb=u=>u?`<img src="${esc(u)}">`:'<div class="ph"></div>';
+function drawG(){$('gSetup').hidden=!G.off;$('gMain').hidden=G.off;if(G.off)return;
+ $('gList').innerHTML=G.collections.map(c=>`<div class="row ${c.active===false?'off':''}">${thumb(c.image_url)}<div class="m"><strong>${esc(c.title)}</strong><br><small>${esc(c.subtitle||'')}${c.subtitle?' · ':''}${G.items.filter(i=>i.collection_id===c.id).length} items${c.active===false?' · hidden':''}</small></div><button class="solid" onclick="openItems('${c.id}')">Items &amp; photos</button><button onclick="editColl('${c.id}')">Edit</button><button onclick="toggleColl('${c.id}')">${c.active===false?'Show':'Hide'}</button><button class="del" onclick="delColl('${c.id}')">Delete</button></div>`).join('')||'<small>No collections yet.</small>';
+ drawItems()}
+function drawItems(){const c=G.collections.find(x=>x.id===curC);$('iCard').hidden=!c;if(!c)return;$('iHead').textContent='Items in \u201c'+c.title+'\u201d';
+ const gl={any:'All',girl:'Girl only',boy:'Boy only'};
+ $('ciList').innerHTML=G.items.filter(i=>i.collection_id===curC).map(i=>`<div class="row">${thumb(i.image_url)}<div class="m"><strong>${esc(i.name)}</strong><br><small>${esc(i.detail||'')}${i.detail?' · ':''}${gl[i.gender]||'All'}${i.image_url?'':' · no photo yet'}</small></div><button onclick="editCItem('${i.id}')">Edit</button><button class="del" onclick="delCItem('${i.id}')">Delete</button></div>`).join('')||'<small>No items yet. Add the first one above.</small>'}
+async function pickG(el){const f=el.files[0];if(!f)return;try{gimg=await up(f);$('gPrev').innerHTML=`<img src="${gimg}" style="height:80px">`}catch(e){$('gErr').textContent=e.message}}
+async function pickI(el){const f=el.files[0];if(!f)return;try{$('iErr').textContent='Uploading\u2026';iimg=await up(f);$('iErr').textContent='';$('iPrev').innerHTML=`<img src="${iimg}" style="height:80px">`}catch(e){$('iErr').textContent=e.message}}
+function saveColl(){const t=$('gName').value.trim();if(!t){$('gErr').textContent='Title is required';return}$('gErr').textContent='';
+ const b={title:t,subtitle:$('gSub').value.trim(),description:$('gDesc').value.trim(),image_url:gimg,active:$('gActive').checked};
+ run(async()=>{if(geid)ck(await sb.from('collections').update(b).eq('id',geid));else{let s=slug(t);if(G.collections.some(c=>c.slug===s))s+='-'+Math.random().toString(36).slice(2,5);ck(await sb.from('collections').insert({...b,slug:s,sort_order:G.collections.length+1}))}resetColl()})}
+function resetColl(){geid='';gimg='';['gName','gSub','gDesc','gFile'].forEach(i=>$(i).value='');$('gActive').checked=true;$('gPrev').innerHTML='';$('gTitle').textContent='Add collection'}
+function editColl(id){const c=G.collections.find(x=>x.id===id);geid=id;gimg=c.image_url||'';$('gName').value=c.title;$('gSub').value=c.subtitle||'';$('gDesc').value=c.description||'';$('gActive').checked=c.active!==false;$('gPrev').innerHTML=gimg?`<img src="${esc(gimg)}" style="height:80px">`:'';$('gTitle').textContent='Edit collection';scrollTo({top:0,behavior:'smooth'})}
+function toggleColl(id){const c=G.collections.find(x=>x.id===id);run(async()=>ck(await sb.from('collections').update({active:c.active===false}).eq('id',id)))}
+function delColl(id){if(!confirm('Delete this collection and all its items?'))return;if(curC===id)curC='';run(async()=>ck(await sb.from('collections').delete().eq('id',id)))}
+function openItems(id){curC=id;resetCItem();drawItems();$('iCard').scrollIntoView({behavior:'smooth'})}
+function saveCItem(){const n=$('iName').value.trim();if(!n){$('iErr').textContent='Item name is required';return}$('iErr').textContent='';
+ const b={collection_id:curC,name:n,detail:$('iDetail').value.trim(),gender:$('iGender').value,image_url:iimg};
+ run(async()=>{if(ieid)ck(await sb.from('collection_items').update(b).eq('id',ieid));else ck(await sb.from('collection_items').insert({...b,sort_order:G.items.filter(i=>i.collection_id===curC).length+1}));resetCItem()})}
+function resetCItem(){ieid='';iimg='';['iName','iDetail','iFile'].forEach(i=>$(i).value='');$('iGender').value='any';$('iPrev').innerHTML='';$('iFormTitle').textContent='Add item'}
+function editCItem(id){const i=G.items.find(x=>x.id===id);ieid=id;iimg=i.image_url||'';$('iName').value=i.name;$('iDetail').value=i.detail||'';$('iGender').value=i.gender||'any';$('iPrev').innerHTML=iimg?`<img src="${esc(iimg)}" style="height:80px">`:'';$('iFormTitle').textContent='Edit item';$('iCard').scrollIntoView({behavior:'smooth'})}
+function delCItem(id){if(confirm('Delete this item?'))run(async()=>ck(await sb.from('collection_items').delete().eq('id',id)))}
+
+/* ---------- Home page photos (moving strip) ---------- */
+let P={rows:[],off:false},phimg='',pheid='';
+async function loadP(){const r=await sb.from('gallery').select('*').order('sort_order').order('created_at');if(r.error){P={rows:[],off:true};return}P={rows:r.data,off:false}}
+async function pickP(el){const f=el.files[0];if(!f)return;try{$('phErr').textContent='Uploading\u2026';phimg=await up(f);$('phErr').textContent='';$('phPrev').innerHTML=`<img src="${phimg}" style="height:80px">`}catch(e){$('phErr').textContent=e.message}}
+function drawP(){$('phSetup').hidden=!P.off;$('phMain').hidden=P.off;if(P.off)return;
+ $('phList').innerHTML=P.rows.map((r,i)=>`<div class="row ${r.active===false?'off':''}">${thumb(r.image_url)}<div class="m"><strong>${esc(r.caption||'(no caption)')}</strong><br><small>${esc(r.label||'')}${r.label?' \u00b7 ':''}${r.link_url?esc(r.link_url):'opens the photo larger'}${r.active===false?' \u00b7 hidden':''}</small></div><button onclick="moveP('${r.id}',-1)" ${i===0?'disabled':''}>\u2191</button><button onclick="moveP('${r.id}',1)" ${i===P.rows.length-1?'disabled':''}>\u2193</button><button onclick="editP('${r.id}')">Edit</button><button onclick="toggleP('${r.id}')">${r.active===false?'Show':'Hide'}</button><button class="del" onclick="delP('${r.id}')">Delete</button></div>`).join('')||'<small>No photos yet. The shop shows its 4 default photos until you add one.</small>'}
+function saveP(){if(!phimg){$('phErr').textContent='Please choose a photo';return}$('phErr').textContent='';
+ const b={image_url:phimg,caption:$('phCap').value.trim(),label:$('phLabel').value.trim(),link_url:$('phLink').value.trim(),active:$('phActive').checked};
+ run(async()=>{if(pheid)ck(await sb.from('gallery').update(b).eq('id',pheid));else ck(await sb.from('gallery').insert({...b,sort_order:P.rows.length+1}));resetP()})}
+function resetP(){pheid='';phimg='';['phCap','phLabel','phLink','phFile'].forEach(i=>$(i).value='');$('phActive').checked=true;$('phPrev').innerHTML='';$('phTitle').textContent='Add photo'}
+function editP(id){const r=P.rows.find(x=>x.id===id);pheid=id;phimg=r.image_url||'';$('phCap').value=r.caption||'';$('phLabel').value=r.label||'';$('phLink').value=r.link_url||'';$('phActive').checked=r.active!==false;$('phPrev').innerHTML=phimg?`<img src="${esc(phimg)}" style="height:80px">`:'';$('phTitle').textContent='Edit photo';scrollTo({top:0,behavior:'smooth'})}
+function toggleP(id){const r=P.rows.find(x=>x.id===id);run(async()=>ck(await sb.from('gallery').update({active:r.active===false}).eq('id',id)))}
+function delP(id){if(confirm('Delete this photo?'))run(async()=>ck(await sb.from('gallery').delete().eq('id',id)))}
+function moveP(id,d){const a=[...P.rows],i=a.findIndex(x=>x.id===id),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];run(async()=>{for(let k=0;k<a.length;k++)if(a[k].sort_order!==k+1)ck(await sb.from('gallery').update({sort_order:k+1}).eq('id',a[k].id))})}
+
+drawPrice();
+start();
+</script></body></html>
