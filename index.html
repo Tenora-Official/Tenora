@@ -2675,5 +2675,16 @@ save();const mo=new MutationObserver(vis);document.querySelectorAll('.site-tab')
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !bg.hidden) close(); });
 })();
 </script>
+<script>
+/* TENORA visit counter: one row per browsing session */
+(function(){try{
+ if(/bot|crawl|spider|preview/i.test(navigator.userAgent)||sessionStorage.getItem('tenora_pv'))return;
+ sessionStorage.setItem('tenora_pv','1');
+ var k='tenora_vid',v=localStorage.getItem(k);if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Math.random()).slice(2)+Date.now();localStorage.setItem(k,v)}
+ var ref='direct';try{if(document.referrer){var h=new URL(document.referrer).hostname;if(h&&h!==location.hostname)ref=h.replace(/^www\./,'')}}catch(e){}
+ var dev=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'mobile':'desktop';
+ getSb().from('page_views').insert({visitor_id:v,path:location.pathname,referrer:ref,device:dev}).then(function(){},function(){});
+}catch(e){}})();
+</script>
 </body>
 </html>
